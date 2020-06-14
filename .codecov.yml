@@ -1,0 +1,9 @@
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  branches:
+    - "!dev"
+
+codecov:
+  require_ci_to_pass: true
