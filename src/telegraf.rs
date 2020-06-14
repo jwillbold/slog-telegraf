@@ -3,7 +3,30 @@ use url::Url;
 use crate::Error;
 use std::io::Write;
 
-pub enum Connection {
+/// Telegraf client
+///
+/// ```
+/// use slog_telegraf::{TelegrafDrainBuilder, Client};
+/// let mut client = Client::new("tcp://192.168.0.108:8094".into()).unwrap();
+/// client.write("measurement,tag=value field=10i".as_bytes()).unwrap();
+/// ```
+pub struct Client {
+    connection: Connection
+}
+
+impl Client {
+    pub fn new(url: String) -> Result<Self, Error> {
+        Ok(Client{
+            connection: Connection::new(url)?
+        })
+    }
+
+    pub fn write(&mut self, bytes:&[u8]) -> io::Result<()> {
+        self.connection.write(bytes).map(|_| ())
+    }
+}
+
+enum Connection {
     Tcp(net::TcpStream),
     Udp(net::UdpSocket)
 }
@@ -32,21 +55,5 @@ impl Connection {
             Connection::Tcp(tcp_stream) => tcp_stream.write(bytes),
             Connection::Udp(udp_socket) => udp_socket.send(bytes)
         }
-    }
-}
-
-pub struct Client {
-    pub connection: Connection
-}
-
-impl Client {
-    pub fn new(url: String) -> Result<Self, Error> {
-        Ok(Client{
-            connection: Connection::new(url)?
-        })
-    }
-
-    pub fn write(&mut self, bytes:&[u8]) -> io::Result<()> {
-        self.connection.write(bytes).map(|_| ())
     }
 }

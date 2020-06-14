@@ -1,11 +1,10 @@
-sudo: required
 language: rust
+dist: xenial
 cache: cargo
 rust:
   - stable
   - beta
   - nightly
-
 # Required for tarpaulin (code coverage)
 addons:
   apt:
@@ -13,7 +12,7 @@ addons:
       - libssl-dev
 os:
   - linux
-matrix:
+jobs:
   allow_failures:
     - rust: nightly
   fast_finish: true

@@ -3,14 +3,15 @@
 
 # slog-telegraf
 
-[slog-rs](https://github.com/slog-rs/slog) drain for [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
+[Telegraf](https://www.influxdata.com/time-series-platform/telegraf/) drain for [slog-rs](https://github.com/slog-rs/slog).
 Formats the log message and sends it using TCP or UDP to Telegraf. 
 
 Feel free to open issues or pull requests.
 
 ## Usage
 
-The logger supports the TCP and UDP socket listener of Telegraf.
+The logger supports the [TCP and UDP socket listener](https://github.com/influxdata/telegraf/blob/release-1.14/plugins/inputs/socket_listener/README.md) 
+of Telegraf and serializes messages according to the [line protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/#syntax).
 
 ### Telegraf setup
 ```conf
@@ -42,7 +43,8 @@ fn main() {
 
 ## Notes
 The only values treated as fields are the values passed in the logging call. In the example above, ``field_key=10i`` is a field.
-All other values are treated as tags. In the example above, ``msg="log",mod="your_crate::main",ver="1.2.1"`` are tags.
+All other values are treated as tags. In the example above, ``msg=log,mod=your_crate::main,ver=1.2.1`` are tags. Since tags my not contain
+whitespaces, it is up to the user to ensure that tag values contain no whitespaces or commas.
 
 ## Performance
 The project comes with a benchmark test for the serialization. On the test machine, the serializer is capable of serializing ~1 mio messages per second.

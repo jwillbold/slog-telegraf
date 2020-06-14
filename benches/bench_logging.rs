@@ -4,6 +4,8 @@ use slog::{KV, Record, o, OwnedKV};
 
 fn serialize<T: slog::KV+Send+Sync+std::panic::RefUnwindSafe>(kv: &OwnedKV<T>) -> String {
     let mut serializer = TelegrafSocketSerializer::start("test_measurement", None).unwrap();
+    let mut tag_serializer = serializer.tag_serializer();
+
     let rinfo_static = slog::RecordStatic {
         location: &slog::RecordLocation {
             file: "file",
@@ -19,30 +21,30 @@ fn serialize<T: slog::KV+Send+Sync+std::panic::RefUnwindSafe>(kv: &OwnedKV<T>) -
     kv.serialize(&Record::new(&rinfo_static,
                                  &format_args!("msg_{}", "foo"),
                                  slog::BorrowedKV(&o!("key" => "val"))),
-                    &mut serializer).unwrap();
+                    &mut tag_serializer).unwrap();
+
+    serializer.tag_value_break().unwrap();
+    let mut field_serializer = serializer.field_serializer();
+
+    kv.serialize(&Record::new(&rinfo_static,
+                              &format_args!("msg_{}", "foo"),
+                              slog::BorrowedKV(&o!("key" => "val"))),
+                 &mut field_serializer).unwrap();
 
     serializer.end().unwrap()
 }
 
 fn benchmark_serialize(c: &mut Criterion) {
     c.bench_function("serialize int", |b| b.iter(|| serialize(black_box(&o!(
-            "int0" => 10,
+            "int0" => 0,
             "int1" => 10000,
             "int2" => -100000123,
-            "int3" => 0,
             "int4" => 5_000_000_000 as i64,
             "float0" => 13.2,
-            "float1" => -105.2,
             "string0" => "foo",
             "string1" => "1.2.1",
-            "string2" => "bar",
-            "string3" => "LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG",
             "char0" => 'x',
-            "char1" => '!',
-            "char2" => '0',
-            "char3" => '_',
             "bool0" => true,
-            "bool1" => false,
     )))));
 }
 
