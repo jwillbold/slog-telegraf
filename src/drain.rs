@@ -9,12 +9,12 @@ use crate::ser::{TelegrafSocketSerializer};
 
 /// Telegraf `Drain` for `slog-rs`.
 ///
-/// ```
+/// ``` no_run
 ///use slog::{Logger, Drain, o, info};
 ///use slog_telegraf::{TelegrafDrain};
 ///
 ///fn main() {
-///    let drain = TelegrafDrain::new("tcp://192.168.0.108:8094".into(), "measurement".into()).unwrap().fuse();
+///    let drain = TelegrafDrain::new("tcp://127.0.0.1:8094".into(), "measurement".into()).unwrap().fuse();
 ///    let drain = slog_async::Async::new(drain).build().fuse();
 ///
 ///    let log = Logger::root(drain, o!("ver" => "1.2.1"));
@@ -61,11 +61,11 @@ impl slog::Drain for TelegrafDrain  {
 
 /// Telegraf `Drain` builder
 ///
-/// ```
+/// ```no_run
 /// use slog::*;
 /// use slog_telegraf::{TelegrafDrainBuilder, Client};
 ///
-/// let client = Client::new("tcp://192.168.0.108:8094".into()).unwrap();
+/// let client = Client::new("tcp://127.0.0.1:8094".into()).unwrap();
 ///
 /// let drain = TelegrafDrainBuilder::new(client, "measurement".into())
 ///                 .add_tag_kv(o!("key" => "value")).build().fuse();

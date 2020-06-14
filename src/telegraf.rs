@@ -5,9 +5,9 @@ use std::io::Write;
 
 /// Telegraf client
 ///
-/// ```
+/// ```no_run
 /// use slog_telegraf::{TelegrafDrainBuilder, Client};
-/// let mut client = Client::new("tcp://192.168.0.108:8094".into()).unwrap();
+/// let mut client = Client::new("tcp://127.0.0.1:8094".into()).unwrap();
 /// client.write("measurement,tag=value field=10i".as_bytes()).unwrap();
 /// ```
 pub struct Client {

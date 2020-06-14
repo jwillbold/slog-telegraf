@@ -1,12 +1,12 @@
 // {{{ Crate docs
 //! Telegraf `Drain` for `slog-rs`
 //!
-//! ```
+//! ```no_run
 //!use slog::{Logger, Drain, o, info};
 //!use slog_telegraf::{TelegrafDrain};
 //!
 //!fn main() {
-//!    let drain = TelegrafDrain::new("tcp://192.168.0.108:8094".into(), "measurement".into()).unwrap().fuse();
+//!    let drain = TelegrafDrain::new("tcp://127.0.0.1:8094".into(), "measurement".into()).unwrap().fuse();
 //!    let drain = slog_async::Async::new(drain).build().fuse();
 //!
 //!    let log = Logger::root(drain, o!("ver" => "1.2.1"));
