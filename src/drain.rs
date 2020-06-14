@@ -6,6 +6,7 @@ use slog::{Record, o};
 use crate::{Client, Error};
 use crate::ser::{TelegrafSocketSerializer};
 
+
 pub struct TelegrafDrain {
     values: Vec<OwnedKVList>,
     client: RefCell<Client>,
@@ -14,7 +15,7 @@ pub struct TelegrafDrain {
 
 impl TelegrafDrain {
     pub fn new(url: String, measurement: String) -> Result<TelegrafDrain, Error>  {
-        Ok(TelegrafDrainBuilder::new(Client::new(url)?, measurement).with_default_keys().build())
+        Ok(TelegrafDrainBuilder::new(Client::new(url)?, measurement).default_keys().build())
     }
 }
 
@@ -72,7 +73,7 @@ impl TelegrafDrainBuilder {
         self
     }
 
-    pub fn with_default_keys(self) -> Self {
+    pub fn default_keys(self) -> Self {
         self.add_key_value(o!(
             "level" => FnValue(move |rinfo| rinfo.level().as_usize()),
             "msg" => PushFnValue(move |record, ser| ser.emit(record.msg())),
