@@ -24,7 +24,7 @@ fn serialize<T: slog::KV+Send+Sync+std::panic::RefUnwindSafe>(kv: &OwnedKV<T>) -
     serializer.end().unwrap()
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
+fn benchmark_serialize(c: &mut Criterion) {
     c.bench_function("serialize int", |b| b.iter(|| serialize(black_box(&o!(
             "int0" => 10,
             "int1" => 10000,
@@ -46,5 +46,5 @@ fn criterion_benchmark(c: &mut Criterion) {
     )))));
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(benches, benchmark_serialize);
 criterion_main!(benches);
