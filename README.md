@@ -1,7 +1,10 @@
+[![Build Status](https://travis-ci.com/jwillbold/slog-telegraf.svg?token=hPh87VpFt3MQPwdySdkS&branch=master)](https://travis-ci.com/jwillbold/slog-telegraf)
+[![codecov](https://codecov.io/gh/jwillbold/slog-telegraf/branch/master/graph/badge.svg?token=2EQLM7NCG1)](https://codecov.io/gh/jwillbold/slog-telegraf)
+
 # slog-telegraf
 
 [slog-rs](https://github.com/slog-rs/slog) drain for [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
-Formats the log message and sends it using TCP to Telegraf. 
+Formats the log message and sends it using TCP or UDP to Telegraf. 
 
 Feel free to open issues or pull requests.
 
@@ -43,4 +46,7 @@ All other values are treated as tags. In the example above, ``msg="log",mod="you
 
 ## Performance
 The project comes with a benchmark test for the serialization. On the test machine, the serializer is capable of serializing ~1 mio messages per second.
+
+If you care more about performance and less about every log message actually arriving, which is also the design philosophy of slog, 
+it is recommended to use the UDP socket.
  
