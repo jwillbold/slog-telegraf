@@ -90,7 +90,7 @@ mod test {
     use slog::{Logger, Drain};
 
     #[test]
-    fn test_logging() {
+    fn test_tcp_logging() {
         let (sender, receiver) = mpsc::channel();
 
         thread::spawn(move || sender.send(|| -> std::io::Result<String> {
@@ -118,7 +118,29 @@ mod test {
         let log = Logger::root(drain, o!("ver" => "1.2.1"));
         info!(log, "log"; "testy" => 10);
 
-        let sent_message = receiver.recv().unwrap().unwrap();
-        assert_eq!(sent_message, "test,mod=\"slog_telegraf::drain::test\",msg=\"log\",level=4i,ver=\"1.2.1\" testy=10i\n");
+        let recvd_message = receiver.recv().unwrap().unwrap();
+        assert_eq!(recvd_message, "test,mod=\"slog_telegraf::drain::test\",msg=\"log\",level=4i,ver=\"1.2.1\" testy=10i\n");
+    }
+
+    #[test]
+    fn test_udp_logging() {
+        let socket = net::UdpSocket::bind("127.0.0.1:63743").unwrap();
+
+        let drain = TelegrafDrain::new("udp://127.0.0.1:63743".into(), "test".into()).unwrap().fuse();
+        let drain = slog_async::Async::new(drain).build().fuse();
+
+        let log = Logger::root(drain, o!("ver" => "1.2.1"));
+
+        // This should ensure that at least one message arrives
+        for _ in 0..10 {
+            info!(log, "log"; "testy" => 10);
+        }
+
+        let mut buf = [0u8; 4096];
+
+        socket.recv(&mut buf).unwrap();
+        let recvd_message =std::str::from_utf8(&buf).unwrap().trim_matches(char::from(0));
+
+        assert_eq!(recvd_message, "test,mod=\"slog_telegraf::drain::test\",msg=\"log\",level=4i,ver=\"1.2.1\" testy=10i\n");
     }
 }

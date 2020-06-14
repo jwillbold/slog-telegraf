@@ -1,16 +1,25 @@
 # slog-telegraf
 
 [slog-rs](https://github.com/slog-rs/slog) drain for [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
-Formats the log message and sends it using TCP to Telegraf.
+Formats the log message and sends it using TCP to Telegraf. 
+
+Feel free to open issues or pull requests.
 
 ## Usage
 
-Currently, only the TCP socket is supported. If you need UDP, UNIX socket or something else, feel free to open an issue or pull request.
+The logger supports the TCP and UDP socket listener of Telegraf.
 
 ### Telegraf setup
 ```conf
 [[inputs.socket_listener]]
   service_address = "tcp://localhost:8094"
+```
+
+or
+
+```conf
+[[inputs.socket_listener]]
+  service_address = "udp://localhost:8094"
 ```
 
 ### Rust example

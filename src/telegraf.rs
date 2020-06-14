@@ -4,7 +4,8 @@ use crate::Error;
 use std::io::Write;
 
 pub enum Connection {
-    Tcp(net::TcpStream)
+    Tcp(net::TcpStream),
+    Udp(net::UdpSocket)
 }
 
 impl Connection {
@@ -14,13 +15,22 @@ impl Connection {
 
         match url.scheme() {
             "tcp" => Ok(Connection::Tcp(net::TcpStream::connect(&*addr)?)),
+            "udp" => {
+                // This will let the OS choose the ip+port
+                let socket = net::UdpSocket::bind(&[net::SocketAddr::from(([0, 0, 0, 0], 0))][..])?;
+                socket.connect(&*addr)?;
+                socket.set_nonblocking(true)?;
+
+                Ok(Connection::Udp(socket))
+            },
             _ => Err(Error::Custom("Only 'tcp' is currently supported".to_string()))
         }
     }
 
-    pub fn write(&mut self, bytes:&[u8]) -> io::Result<usize> {
+    pub fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         match self {
-            Connection::Tcp(tcp_stream) => tcp_stream.write(bytes)
+            Connection::Tcp(tcp_stream) => tcp_stream.write(bytes),
+            Connection::Udp(udp_socket) => udp_socket.send(bytes)
         }
     }
 }
