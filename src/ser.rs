@@ -2,25 +2,28 @@ use std::fmt;
 use std::fmt::Write;
 use slog::{Key};
 
-pub(crate) struct TelegrafSocketSerializer {
+#[doc(hidden)]
+// TelegrafSocketSerializer is only exported to use it in benchmarks. It is not considered
+// stable API.
+pub struct TelegrafSocketSerializer {
     data: String,
     skip_comma: bool
 }
 
 impl TelegrafSocketSerializer {
-    pub(crate) fn start(measurement: &str, len: Option<usize>) -> Result<Self, slog::Error> {
+    pub fn start(measurement: &str, len: Option<usize>) -> Result<Self, slog::Error> {
         let mut data = String::with_capacity(len.unwrap_or(120));
         data.write_str(measurement)?;
 
         Ok(TelegrafSocketSerializer { data, skip_comma: false})
     }
 
-    pub(crate) fn tag_value_break(&mut self) -> slog::Result {
+    pub fn tag_value_break(&mut self) -> slog::Result {
         self.skip_comma = true;
         self.data.write_char(' ').map_err(|e| e.into())
     }
 
-    pub(crate) fn end(self) -> Result<String, slog::Error> {
+    pub fn end(self) -> Result<String, slog::Error> {
         let mut data = self.data;
         data.write_char('\n')?;
         Ok(data)
@@ -32,26 +35,18 @@ impl TelegrafSocketSerializer {
         } else {
             self.data.write_char(',')?;
         }
+
         Ok(())
     }
 
     fn write_int(&mut self, key: Key, integer: i64) -> slog::Result {
         self.maybe_write_comma()?;
         self.data.write_fmt(format_args!("{}={}i", key, integer)).map_err(|e| e.into())
-        // self.data.write_str(key)?;
-        // self.data.write_char('=')?;
-        // self.data.write_str(&format!("{}i", integer)).map_err(|e| e.into())
     }
 
     fn write_float(&mut self, key: Key, float: f64) -> slog::Result {
-        // use std::string::ToString;
-
         self.maybe_write_comma()?;
         self.data.write_fmt(format_args!("{}={}", key, float)).map_err(|e| e.into())
-
-        // self.data.write_str(key)?;
-        // self.data.write_char('=')?;
-        // self.data.write_str(&float.to_string()).map_err(|e| e.into())
     }
 }
 
@@ -63,6 +58,7 @@ impl slog::Serializer for TelegrafSocketSerializer {
     fn emit_i8(&mut self, key: Key, val: i8) -> slog::Result {
         self.write_int(key, val as i64)
     }
+
     fn emit_u16(&mut self, key: Key, val: u16) -> slog::Result {
         self.write_int(key, val as i64)
     }
@@ -107,12 +103,10 @@ impl slog::Serializer for TelegrafSocketSerializer {
 
     fn emit_bool(&mut self, key: Key, val: bool) -> slog::Result {
         self.maybe_write_comma()?;
-        self.data.write_str(key)?;
-        self.data.write_char('=')?;
         if val {
-            self.data.write_char('t').map_err(|e| e.into())
+            self.data.write_fmt(format_args!("{}=t", key)).map_err(|e| e.into())
         } else {
-            self.data.write_char('f').map_err(|e| e.into())
+            self.data.write_fmt(format_args!("{}=f", key)).map_err(|e| e.into())
         }
     }
 
@@ -128,32 +122,22 @@ impl slog::Serializer for TelegrafSocketSerializer {
     }
 
 
-    // Serialize '())' as '0'
+    // Serialize '()' as '0'
     fn emit_unit(&mut self, key: Key) -> slog::Result {
         self.maybe_write_comma()?;
-        self.data.write_str(key)?;
-        self.data.write_char('=')?;
-        self.data.write_char('0').map_err(|e| e.into())
+        self.data.write_fmt(format_args!("{}=0", key)).map_err(|e| e.into())
     }
 
     // Serialize 'None' as 'false'
     fn emit_none(&mut self, key: Key) -> slog::Result {
         self.maybe_write_comma()?;
-        self.data.write_str(key)?;
-        self.data.write_char('=')?;
-        self.data.write_char('f').map_err(|e| e.into())
+        self.data.write_fmt(format_args!("{}=f", key)).map_err(|e| e.into())
     }
 
 
     fn emit_arguments(&mut self, key: Key, val: &fmt::Arguments) -> slog::Result {
         self.maybe_write_comma()?;
-
-        self.data.write_str(key)?;
-        self.data.write_str("=\"")?;
-        self.data.write_fmt(*val)?;
-        self.data.write_str("\"")?;
-
-        Ok(())
+        self.data.write_fmt(format_args!("{}=\"{}\"", key, val)).map_err(|e| e.into())
     }
 }
 
@@ -180,15 +164,33 @@ mod test {
             level: slog::Level::Info
         };
 
-        o!(
-            "string" => "str"
-        ).serialize(&Record::new(&rinfo_static,
-                                             &format_args!("msg_{}", "foo"),
-                                             slog::BorrowedKV(&o!("key" => "val"))),
-                                &mut serializer).unwrap();
+        &o!(
+            "int0" => 10 as u8,
+            "int1" => -10 as i8,
+            "int2" => 10000 as u16,
+            "int3" => -10000 as i16,
+            "int4" => 2_000_000_000 as u32,
+            "int5" => -2_000_000_000 as i32,
+            "int6" => 2_000_000_000 as usize,
+            "int7" => -2_000_000_000 as isize,
+            "int8" => 2_000_000_000_000 as u64,
+            "int9" => -2_000_000_000_000 as i64,
+            "float0" => 13.2 as f32,
+            "float1" => -105.2 as f64,
+            "string0" => "foo",
+            "string1" => "1.2.1",
+            "char0" => 'x',
+            "bool0" => true,
+            "bool1" => false,
+            "unit" => (),
+            "none" => Option::<()>::None
+       ).serialize(&Record::new(&rinfo_static,
+                                 &format_args!("msg_{}", "foo"),
+                                 slog::BorrowedKV(&o!("key" => "val"))),
+                    &mut serializer).unwrap();
 
         let data = serializer.end().unwrap();
 
-        assert_eq!(data, "test_measurement,string=\"str\"\n");
+        assert_eq!(data, "test_measurement,none=f,unit=0,bool1=f,bool0=t,char0=\"x\",string1=\"1.2.1\",string0=\"foo\",float1=-105.2,float0=13.199999809265137,int9=-2000000000000i,int8=2000000000000i,int7=-2000000000i,int6=2000000000i,int5=-2000000000i,int4=2000000000i,int3=-10000i,int2=10000i,int1=-10i,int0=10i\n");
     }
 }

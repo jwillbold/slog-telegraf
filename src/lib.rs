@@ -1,4 +1,4 @@
-#[macro_use]
+#[cfg_attr(test, macro_use)]
 extern crate slog;
 extern crate url;
 
@@ -10,3 +10,4 @@ mod telegraf;
 pub use drain::{TelegrafDrain, TelegrafDrainBuilder};
 pub use error::Error;
 pub use telegraf::{Connection, Client};
+pub use ser::TelegrafSocketSerializer;
