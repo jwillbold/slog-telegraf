@@ -146,7 +146,7 @@ mod test {
         }()));
 
         // Wait fot the listener
-        thread::sleep(std::time::Duration::from_micros(700));
+        thread::sleep(std::time::Duration::from_millis(300));
 
         let drain = TelegrafDrain::new("tcp://127.0.0.1:63742".into(), "test".into()).unwrap().fuse();
         let drain = slog_async::Async::new(drain).build().fuse();
