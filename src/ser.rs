@@ -30,8 +30,12 @@ impl TelegrafSocketSerializer {
         self.data.write_char(' ').map_err(|e| e.into())
     }
 
-    pub fn end(self) -> Result<String, slog::Error> {
+    pub fn end(self, insert_dummy_field: bool) -> Result<String, slog::Error> {
         let mut data = self.data;
+        if insert_dummy_field {
+            // The log statement contains no field, so insert a dummy field
+            data.write_fmt(format_args!("_dummy=1i"))?;
+        }
         data.write_char('\n')?;
         Ok(data)
     }
@@ -81,7 +85,7 @@ impl<'a> slog::Serializer for TelegrafSocketTagSerializer<'a> {
 
 pub struct TelegrafSocketFieldSerializer<'a> {
     data: &'a mut String,
-    skip_comma: bool
+    pub skip_comma: bool
 }
 
 impl<'a> TelegrafSocketFieldSerializer<'a> {
@@ -218,7 +222,7 @@ mod test {
             level: slog::Level::Info
         };
 
-        &o!(
+        o!(
             "int0" => 10 as u8,
             "int1" => -10 as i8,
             "int2" => 10000 as u16,
@@ -237,7 +241,7 @@ mod test {
             "bool0" => true,
             "bool1" => false,
             "unit" => (),
-            "none" => Option::<()>::None
+            "none" => Option::<()>::None,
        ).serialize(&Record::new(&rinfo_static,
                                 &format_args!("msg_{}", "foo"),
                                 slog::BorrowedKV(&o!("key" => "val"))),
@@ -250,9 +254,14 @@ mod test {
         let mut tag_serializer = serializer.tag_serializer();
 
         do_serializer(&mut tag_serializer);
+        serializer.tag_value_break().unwrap();
 
-        let data = serializer.end().unwrap();
-        assert_eq!(data, "test_measurement,none=f,unit=0,bool1=false,bool0=true,char0=x,string1=1.2.1,string0=foo,float1=-105.2,float0=13.2,int9=-2000000000000,int8=2000000000000,int7=-2000000000,int6=2000000000,int5=-2000000000,int4=2000000000,int3=-10000,int2=10000,int1=-10,int0=10\n");
+        let field_serializer = serializer.field_serializer();
+        let insert_dummy_field = field_serializer.skip_comma;
+        assert_eq!(insert_dummy_field, true);
+
+        let data = serializer.end(insert_dummy_field).unwrap();
+        assert_eq!(data, "test_measurement,none=f,unit=0,bool1=false,bool0=true,char0=x,string1=1.2.1,string0=foo,float1=-105.2,float0=13.2,int9=-2000000000000,int8=2000000000000,int7=-2000000000,int6=2000000000,int5=-2000000000,int4=2000000000,int3=-10000,int2=10000,int1=-10,int0=10 _dummy=1i\n");
     }
 
     #[test]
@@ -263,7 +272,10 @@ mod test {
 
         do_serializer(&mut field_serializer);
 
-        let data = serializer.end().unwrap();
+        let insert_dummy_field = field_serializer.skip_comma;
+        assert_eq!(insert_dummy_field, false);
+
+        let data = serializer.end(insert_dummy_field).unwrap();
 
         assert_eq!(data, "test_measurement none=f,unit=0,bool1=f,bool0=t,char0=\"x\",string1=\"1.2.1\",string0=\"foo\",float1=-105.2,float0=13.199999809265137,int9=-2000000000000i,int8=2000000000000i,int7=-2000000000i,int6=2000000000i,int5=-2000000000i,int4=2000000000i,int3=-10000i,int2=10000i,int1=-10i,int0=10i\n");
     }

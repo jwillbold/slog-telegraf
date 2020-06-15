@@ -46,7 +46,8 @@ impl Connection {
 
                 Ok(Connection::Udp(socket))
             },
-            _ => Err(Error::Custom("Only 'tcp' is currently supported".to_string()))
+            "" => Err(Error::Custom("Please specify the protocol 'tcp' or 'udp'".to_string())),
+            _ => Err(Error::Custom("Only 'tcp' and 'udp' is currently supported".to_string()))
         }
     }
 
@@ -55,5 +56,18 @@ impl Connection {
             Connection::Tcp(tcp_stream) => tcp_stream.write(bytes),
             Connection::Udp(udp_socket) => udp_socket.send(bytes)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_connection_new() {
+        assert!(Connection::new("udp://127.0.0.1:12345".into()).is_ok());
+
+        assert!(Connection::new("127.0.0.1:12345".into()).is_err());
+        assert!(Connection::new("http://127.0.0.1:12345".into()).is_err());
     }
 }

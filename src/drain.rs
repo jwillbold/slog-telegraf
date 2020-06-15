@@ -54,7 +54,8 @@ impl slog::Drain for TelegrafDrain  {
         let mut field_serializer = serializer.field_serializer();
         rinfo.kv().serialize(rinfo, &mut field_serializer)?;
 
-        let data = serializer.end()?;
+        let insert_dummy_field = field_serializer.skip_comma;
+        let data = serializer.end(insert_dummy_field)?;
         self.client.borrow_mut().write(data.as_bytes())
     }
 }

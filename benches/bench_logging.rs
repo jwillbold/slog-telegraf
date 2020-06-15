@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use slog_telegraf::{TelegrafSocketSerializer};
 use slog::{KV, Record, o, OwnedKV};
 
-fn serialize<T: slog::KV+Send+Sync+std::panic::RefUnwindSafe>(kv: &OwnedKV<T>) -> String {
+fn serialize<T: slog::SendSyncRefUnwindSafeKV>(kv: &OwnedKV<T>) -> String {
     let mut serializer = TelegrafSocketSerializer::start("test_measurement", None).unwrap();
     let mut tag_serializer = serializer.tag_serializer();
 
@@ -31,7 +31,8 @@ fn serialize<T: slog::KV+Send+Sync+std::panic::RefUnwindSafe>(kv: &OwnedKV<T>) -
                               slog::BorrowedKV(&o!("key" => "val"))),
                  &mut field_serializer).unwrap();
 
-    serializer.end().unwrap()
+    let insert_dummy_field = field_serializer.skip_comma;
+    serializer.end(insert_dummy_field).unwrap()
 }
 
 fn benchmark_serialize(c: &mut Criterion) {

@@ -48,6 +48,12 @@ The only values treated as fields are the values passed in the logging call. In 
 All other values are treated as tags. In the example above, ``msg=log,mod=your_crate::main,ver=1.2.1`` are tags. Since tags my not contain
 whitespaces, it is up to the user to ensure that tag values contain no whitespaces or commas.
 
+Further, neither tag nor fields keys may contain whitespaces. Thus, log messages as well as all slog value keys may not contain whitespaces.
+slog-telegraf will not validate messages. Instead they will be filtered by Telegraf and not appear in the database.
+
+Since messages with no fields (messages with not parameter besides the log message) are not considered valid by InfluxDB, slog-telegraf appends the dummy
+field '_dummy=1i' to otherwise field-less messages.
+
 ## Performance
 The project comes with a benchmark test for the serialization. On the test machine, the serializer is capable of serializing ~1 mio messages per second.
 
