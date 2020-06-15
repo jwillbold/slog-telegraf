@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/jwillbold/slog-telegraf.svg?token=hPh87VpFt3MQPwdySdkS&branch=master)](https://travis-ci.com/jwillbold/slog-telegraf)
 [![codecov](https://codecov.io/gh/jwillbold/slog-telegraf/branch/master/graph/badge.svg?token=2EQLM7NCG1)](https://codecov.io/gh/jwillbold/slog-telegraf)
+[![crates.io](https://img.shields.io/crates/v/slog-telegraf.svg)](https://crates.io/crates/slog-telegraf)
 
 # slog-telegraf
 
