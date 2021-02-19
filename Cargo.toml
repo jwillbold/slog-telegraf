@@ -1,6 +1,6 @@
 [package]
 name = "slog-telegraf"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Johannes Willbold <johannes.willbold@gmail.de>"]
 edition = "2018"
 readme = "README.md"
@@ -15,8 +15,8 @@ travis-ci = { repository = "jwillbold/slog-telegraf", branch = "master" }
 codecov = { repository = "jwillbold/slog-telegraf", branch = "master", service = "github" }
 
 [dependencies]
-slog = "2.5"
-url = "~2.1.1"
+slog = "^2.5"
+url = "^2.1"
 
 [dev-dependencies]
 slog-async = "2.5"
